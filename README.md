@@ -7,7 +7,7 @@ Zuvio自動簽到腳本
 
 
 ## 配置
-賬號密碼  
+Zuvio賬號密碼  
 ```python
     zuvio_user = zuvio(
         user_mail='@nkust.edu.tw',
