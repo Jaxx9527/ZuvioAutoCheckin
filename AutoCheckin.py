@@ -3,7 +3,7 @@ import logging
 import re
 import threading
 import time
-
+import random
 import requests
 from lxml import etree
 
@@ -19,7 +19,7 @@ class zuvio:
     def __init__(self, user_mail, password, **kwargs):
 
         self.main_session = requests.session()
-        self.main_session.verify = False
+        #self.main_session.verify = False
         self.access_token = None
         self.user_id = None
         if self.login(user_mail, password) is False:
@@ -82,19 +82,6 @@ class zuvio:
         return False
 
     def get_course_list(self):
-        """Get course list.
-
-        Returns:
-            [list]: item: dict
-                    semester_id	String	28
-                    semester_name	String	108-1
-                    teacher_name	String	張俊....
-                    course_id	String	384840
-                    course_name	String	4696_1081_實務....
-                    course_unread_num	String	0
-                    course_created_at	String	2019-09-13 04:20:53
-                    pinned	Boolean	false
-        """
         course_list_url = 'https://irs.zuvio.com.tw/course/listStudentCurrentCourses'
         if self.user_id is None and self.access_token is None:
             return False
@@ -107,24 +94,37 @@ class zuvio:
         if course_request.status_code == 200:
             self.course_list = course_request.json()['courses']
             zuvio_logging.info(msg="[Courses] get courses success.")
-            return course_request.json()['courses']
+            for idx, course in enumerate(self.course_list, start=1):
+                zuvio_logging.info(
+                    msg=f"[Course {idx}] {course['course_name']} - {course['teacher_name']} (ID: {course['course_id']})"
+                )
+            return self.course_list
         return False
 
     def check_rollcall_status(self, course_id):
 
         def _parse_rollcall_page(html):
-            "var rollcall_id = '(\w{0,})"
             root = etree.HTML(html)
-            ststus_message = root.xpath(
-                "//div[@class='irs-rollcall']//div[@class='text']")
-            if len(ststus_message) == 1:
+
+            active_punctual_div = root.xpath("//div[@class='active punctual']")
+
+            no_active_div = root.xpath("//div[@class='no-active']")
+
+            if len(active_punctual_div) > 0:
                 zuvio_logging.debug(
-                    msg='[Rollcall] status {course_id} {status}'.format(
-                        course_id=course_id,
-                        status=ststus_message[0].text
-                    ))
-                if ststus_message[0].text == '目前未開放簽到':
-                    return False
+                    msg=f"[Rollcall] Course ID  {course_id} already checkin"
+                )
+                return False
+
+            if len(no_active_div) > 0:
+                zuvio_logging.debug(
+                    msg=f"[Rollcall] Course ID  {course_id} checkin not start yet"
+                )
+                return False
+
+            zuvio_logging.debug(
+                msg=f"[Rollcall] Course ID  {course_id} rollcall available"
+            )
             return True
 
         def _parse_rollcall_id(html):
@@ -155,8 +155,8 @@ class zuvio:
             'accessToken': self.access_token,
             'rollcall_id': rollcall_id,
             'device': "WEB",
-            'lat': self.rollcall_data['lat'],
-            'lng': self.rollcall_data['lng']
+            'lat':  random.uniform(self.rollcall_data['lat'] - 0.00025, self.rollcall_data['lat'] + 0.00025),
+            'lng':  random.uniform(self.rollcall_data['lng'] - 0.000035, self.rollcall_data['lng'] + 0.000035)
         }
         rollcall_url = 'https://irs.zuvio.com.tw/app_v2/makeRollcall'
         rollcall_request = self.main_session.post(url=rollcall_url, data=data)
@@ -164,28 +164,46 @@ class zuvio:
             return True
         return False
 
-    def rollcall_run_forever(self, check_sleep_sec=60):
+    def send_telegram_message(self, message):
+        bot_token = "YOUR_BOT_TOKEN"
+        chat_id = "YOUR_CHAT_ID"
+        url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        data = {
+            "chat_id": chat_id,
+            "text": message
+        }
+        try:
+            requests.post(url, data=data, timeout=10)
+        except Exception as e:
+            zuvio_logging.warning(msg=f"[TG] Send message failed: {e}")
+
+    def rollcall_run_forever(self, check_sleep_sec=30):
         if self.course_list == None:
             self.get_course_list()
         while True:
             for course in self.course_list:
-                rollcall_status = self.check_rollcall_status(
-                    course_id=course['course_id'])
+                rollcall_status = self.check_rollcall_status(course_id=course['course_id'])
                 if isinstance(rollcall_status, dict):
                     if rollcall_status['rollcall_status_msg'] != False:
                         if self.rollcall(rollcall_id=rollcall_status['rollcall_id']):
-                            zuvio_logging.debug(msg='success rollcall.')
-                            return True
+                            msg = "[Rollcall] Course ID " + rollcall_status['rollcall_id'] + \
+                                  ' checkin success at ' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                            zuvio_logging.info(msg=msg)
+                            self.send_telegram_message(msg)
+                            continue
             time.sleep(check_sleep_sec)
 
 
 if __name__ == "__main__":
     zuvio_user = zuvio(
-        user_mail='@nkust.edu.tw',
-        password=''
+        user_mail='xxx@mail.nuk.edu.tw',
+        password='xxx'
     )
     zuvio_user.rollcall_data = {
-        'lat': 22.647300,
-        'lng': 120.328798
+        'lat': 22.7332383,
+        'lng': 120.2765274
     }
+
     zuvio_user.rollcall_run_forever()
+
+
