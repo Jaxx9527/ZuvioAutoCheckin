@@ -37,6 +37,6 @@ Zuvio賬號密碼
 ### Linux VPS 
 使用pip 安裝[requirements.txt](./requirements.txt)內依賴  
 使用screen保持腳本在後台運行
-### Windows掛機寶 
+### Windows VPS 
 使用pip 安裝[requirements.txt](./requirements.txt)內依賴  
 使用cmd運行腳本
