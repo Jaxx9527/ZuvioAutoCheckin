@@ -1,6 +1,6 @@
 # ZuvioAutoCheckin
 
-Zuvio自動簽到腳本  
+Zuvio掛機自動簽到腳本  
 自動獲取所有課程列表，每30s遍歷所有課程是否可簽到  
 支援GPS簽到、非GPS簽到 （2025年10月測試）  
 在原腳本基礎上，避免了重複簽到、增加隨機座標偏移、簽到成功TG通知
@@ -34,7 +34,9 @@ Zuvio賬號密碼
 在 `文件管理` 中新增AutoCheckin.py文件，並填寫配置文件  
 在 `定時任務` 中新增 `開機運行` 任務， `命令/腳本` 中輸入文件名如AutoCheckin.py   
 當狀態持續顯示為運行中即為成功部署  
-### 使用screen 
+### Linux VPS 
 使用pip 安裝[requirements.txt](./requirements.txt)內依賴  
 使用screen保持腳本在後台運行
-
+### Windows掛機寶 
+使用pip 安裝[requirements.txt](./requirements.txt)內依賴  
+使用cmd運行腳本
