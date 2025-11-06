@@ -186,7 +186,7 @@ class zuvio:
                 if isinstance(rollcall_status, dict):
                     if rollcall_status['rollcall_status_msg'] != False:
                         if self.rollcall(rollcall_id=rollcall_status['rollcall_id']):
-                            msg = "[Rollcall] Course ID " + rollcall_status['rollcall_id'] + \
+                            msg = "[Rollcall] Rollcall ID " + rollcall_status['rollcall_id'] + \
                                   ' checkin success at ' + datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                             zuvio_logging.info(msg=msg)
                             self.send_telegram_message(msg)
