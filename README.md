@@ -30,7 +30,7 @@ Zuvio賬號密碼
 
 ## 部署
 ### 使用青龍面板
-在 `依賴管理` 中安裝[requirements.txt](./requirements.txt)內依賴  
+在 `依賴管理` 中安裝[requirements.txt](./requirements.txt)內套件  
 在 `文件管理` 中新增AutoCheckin.py文件，並填寫配置文件  
 在 `定時任務` 中新增 `開機運行` 任務， `命令/腳本` 中輸入文件名如AutoCheckin.py   
 當狀態持續顯示為運行中即為成功部署  
